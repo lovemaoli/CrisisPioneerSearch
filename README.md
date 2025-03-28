@@ -32,11 +32,15 @@ graph TD
         D -->|最终总结| A
     end
 
-    note left of A: 用户输入问题
-    note right of D: 输出最终答案
-    note top of B: 大模型初步响应
-    note top of C: 多平台搜索
-    note top of D: 结果整合优化
+    A:::noteA
+    D:::noteD
+    B:::noteB
+    C:::noteC
+
+    classDef noteA fill:#fff,stroke:#000,stroke-width:1px,font-size:12px
+    classDef noteD fill:#fff,stroke:#000,stroke-width:1px,font-size:12px
+    classDef noteB fill:#fff,stroke:#000,stroke-width:1px,font-size:12px
+    classDef noteC fill:#fff,stroke:#000,stroke-width:1px,font-size:12px
 ```
 
 ## 运行指南
