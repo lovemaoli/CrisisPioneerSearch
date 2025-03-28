@@ -27,9 +27,9 @@ graph TD
     style D fill:#e9c,stroke:#333,stroke-width:2px
 
     subgraph 数据流配置
-        B -->|初步回答 (llm_result)| A
-        C -->|搜索结果 (bing_result, site_result)| D
-        D -->|最终总结 (final_result)| A
+        B -->|初步回答| A
+        C -->|搜索结果| D
+        D -->|最终总结| A
     end
 
     note left of A: 用户输入问题
