@@ -10,6 +10,35 @@ MoFA 框架图
 
 <img src="https://github.com/RelevantStudy/mofasearch/blob/main/hackathons/docs/images/image-20250310010710778.png" alt="image-20250310010710778" style="zoom:67%;" />
 
+Agent 框架
+
+```mermaid
+graph TD
+    A[终端输入] --> B[帮助智能体]
+    A --> C[搜索智能体]
+    A --> D[思考智能体]
+    B --> A
+    C --> D
+    D --> A
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#aec,stroke:#333,stroke-width:2px
+    style C fill:#caf,stroke:#333,stroke-width:2px
+    style D fill:#e9c,stroke:#333,stroke-width:2px
+
+    subgraph 数据流配置
+        B -->|初步回答 (llm_result)| A
+        C -->|搜索结果 (bing_result, site_result)| D
+        D -->|最终总结 (final_result)| A
+    end
+
+    note left of A: 用户输入问题
+    note right of D: 输出最终答案
+    note top of B: 大模型初步响应
+    note top of C: 多平台搜索
+    note top of D: 结果整合优化
+```
+
 ## 运行指南
 
 ### 1 Python 环境
@@ -56,7 +85,7 @@ pip install -e .
 
 ### 4.2 配置环境变量
 
-创建 `.env.secret` 文件(crisis_pioneer_search.yml.yml目录同级进行创建)：
+创建 `.env.secret` 文件(crisis_pioneer_search.yml目录同级进行创建)：
 ```plaintext
 LLM_API_KEY=your_api_key_here
 LLM_API_BASE=https://api.openai.com/v1  # 或其他API地址
@@ -97,40 +126,37 @@ root@root hello_world % terminal-input
 ## 架构设计
 ### 实现Agent逻辑
 
-编辑 `xxx.py`：
-```python
-from mofa.agent_build.base.base_agent import MofaAgent, run_agent
-from openai import OpenAI
-import os
-from dotenv import load_dotenv
+输入问题->大模型先给出一个简要的回答->必应搜网站、微博、今日头条、腾讯新闻->发给大模型，大模型最后做一次总结
 
-@run_agent
-def run(agent: MofaAgent):
-    try:
-        ……
+### 数据流配置解释
 
-def main():
-    agent = MofaAgent(agent_name='my-agent')
-    run(agent=agent)
+关于 `crisis_pioneer_search.yml`：
+1. terminal-input：
 
-if __name__ == "__main__":
-    main()
-```
+- 作为用户交互入口
+- 接收来自三个智能体的输出：初步回答(first_answer)、相关网站列表(relevent_site)和最终分析结果(agent_response)
+- 输出用户查询(data)到其他智能体
 
-### 数据流配置
+2. crisis-help-agent：
 
-创建 `dataflow.yml`：
-```yaml
-nodes:
-  - id: terminal-input
-    build: pip install -e ../../node-hub/terminal-input
-    path: dynamic
-    outputs: data
-    inputs:
-      agent_response: my-llm-agent/llm_result
+- 帮助智能体，提供快速初步回答
+- 接收用户查询(terminal-input/data)
+- 生成初步分析结果(llm_result)
 
+3. crisis-search-agent：
 
-```
+- 搜索智能体，负责从多个平台获取信息
+- 接收用户查询(terminal-input/data)
+- 输出两种结果：
+(1) bing_result：从必应搜索获取的数据
+(2) site_result：从其他相关网站(如微博、今日头条)收集的信息
+
+4. crisis-think-agent：
+
+- 思考智能体，整合搜索结果和初步回答
+- 接收用户查询(terminal-input/data)和必应搜索结果(crisis-search-agent/bing_result)
+- 生成最终综合分析(final_result)
+- IS_DATAFLOW_END: true 表示此节点执行完毕后数据流结束，准备接收新的用户输入
 
 ### 关键代码说明
 
@@ -168,27 +194,46 @@ messages=[
 3. 保持代码结构简单清晰
 
 ### agent处理流程详解
-1. 用户通过 terminal-input 输入数据
-2. terminal-input 将数据发送给 agent
-3. agent 处理数据并返回结果
-4. 结果返回给 terminal-input 显示
-5. 由于 IS_DATAFLOW_END=true，流程结束并重新开始
+1. 用户通过 terminal-input 输入应急事件查询
+2. 查询分别发送给帮助智能体和搜索智能体
+3. 帮助智能体提供初步回答，基于大模型已有知识
+4. 搜索智能体在多个渠道检索最新信息
+5. 思考智能体整合搜索结果和初步回答，生成最终分析报告
+6. 最终分析报告返回给terminal-input显示给用户
 
 ### 日志文件位置
-- `logs/xxx-agent.txt`: 智能体运行日志
-- `logs/dora-coordinator.txt`: 协调器日志
-- `logs/dora-daemon.txt`: 守护进程日志
+- logs/crisis-search-agent.txt: 主智能体运行日志
+- logs/search-engine-agent.txt: 搜索智能体日志
+- logs/thinking-agent.txt: 思考智能体日志
+- logs/dora-coordinator.txt: 协调器日志
+- logs/dora-daemon.txt: 守护进程日志
+
 
 ### 项目结构
+
 ```
-my-new-agent/
-├── agent/
-│   ├── configs/
-│   │   └── agent.yml       # 配置文件
-│   ├── main.py             # 主程序
-│   └── __init__.py
+crisis_pioneer_search/
+├── agent-hub/
+│   ├── crisis-search-agent/
+│   │   ├── configs/
+│   │   │   └── agent.yml       # 配置文件
+│   │   ├── main.py             # 主程序
+│   │   └── __init__.py
+│   ├── search-engine-agent/
+│   │   ├── configs/
+│   │   │   └── agent.yml       # 配置文件
+│   │   ├── main.py             # 主程序
+│   │   └── __init__.py
+│   └── thinking-agent/
+│       ├── configs/
+│       │   └── agent.yml       # 配置文件
+│       ├── main.py             # 主程序
+│       └── __init__.py
+├── examples/
+│   └── crisis_pioneer_search.yml  # 数据流配置
 ├── tests/
-│   └── test_main.py        # 测试代码
-├── pyproject.toml          # 依赖配置
-└── README.md               # 项目文档
+│   └── test_agents.py          # 测试代码
+├── .env.secret                 # API密钥配置
+├── pyproject.toml              # 依赖配置
+└── README.md                   # 项目文档
 ```
