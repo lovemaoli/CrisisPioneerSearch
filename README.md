@@ -2,15 +2,45 @@
 
 ## 设计理念
 
-一个AI驱动的搜索引擎，以MoFA开发框架搭建，目标定位为在官方渠道和社交媒体上搜寻某个热点话题（可以是气象灾害、应急警报等），由agent整合各渠道信息并反馈给用户。
+急先锋搜索是一个AI驱动的搜索引擎，基于MoFA开发框架构建，旨在为用户提供快速、精准的热点话题信息整合服务。项目的核心目标是通过多智能体协作，整合官方渠道和社交媒体上的实时信息，帮助用户在紧急情况下快速获取权威信息和有效建议。
+
+### 核心特点
+
+1. **多智能体协作**：
+   - 系统由多个智能体组成，包括帮助智能体、搜索智能体和思考智能体，各司其职，协同工作。
+   - 帮助智能体提供初步回答，搜索智能体从多平台获取实时数据，思考智能体整合信息并生成最终分析。
+
+2. **实时性与准确性**：
+   - 通过集成多平台数据源（如必应搜索、微博、今日头条等），确保信息的实时性。
+   - 利用大模型的强大分析能力，过滤冗余信息，提供高质量的答案。
+
+3. **用户友好性**：
+   - 终端输入作为用户交互入口，简化了操作流程。
+   - 系统设计注重用户体验，提供清晰的查询结果和直观的交互方式。
+
+4. **可扩展性**：
+   - 基于MoFA框架的模块化设计，便于功能扩展和智能体的替换。
+   - 支持多种大模型（如OpenAI、星火大模型等），可根据需求灵活调整。
+
+### 应用场景
+
+- **突发事件应急**：快速获取气象灾害、应急警报等相关信息，为用户提供权威建议。
+- **热点话题追踪**：整合社交媒体和官方渠道的信息，帮助用户全面了解事件动态。
+- **信息整合与分析**：通过多平台数据源的整合，生成高质量的分析报告，适用于新闻、研究等领域。
+
+### 设计目标
+
+- **高效**：通过多智能体并行处理，提升信息获取与分析的效率。
+- **可靠**：确保数据来源的权威性与结果的准确性。
+- **易用**：提供简单直观的交互方式，降低用户使用门槛。
 
 ## 技术架构图
 
-MoFA 框架图
+### MoFA 框架图
 
 <img src="https://github.com/RelevantStudy/mofasearch/blob/main/hackathons/docs/images/image-20250310010710778.png" alt="image-20250310010710778" style="zoom:67%;" />
 
-Agent 框架
+### Agent 框架
 
 ```mermaid
 graph TD
@@ -42,19 +72,7 @@ graph TD
 
 ## 运行指南
 
-### 1 Python 环境
-
-```bash
-# 安装 UV 包管理器 加快mofa安装
-pip install uv
-```
-
-### **注意**: 
-- 本地python环境要纯净，不要多个python版本，否则容易导致Dora-rs运行环境和Mofa安装环境的冲突。
-- 如果你的环境使用的是Anaconda / Miniconda，务必将Mofa安装到`Base`环境下，以保证Dora运行环境和Mofa环境的一致。
-- 要求python环境 >= 3.10。
-
-### 2 Rust 环境
+### 1 Rust 环境
 ```bash
 # 安装 Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -68,10 +86,28 @@ cargo --version
 dora --version
 ```
 
+### 2 Mofa 框架环境
+
+```bash
+# 安装 UV 包管理器
+pip install uv
+# 在合适的位置克隆仓库
+git clone https://github.com/moxin-org/mofa.git
+cd mofa/python
+# 安装依赖
+uv pip install -e .
+pip install -e . 
+```
+
+### **注意**: 
+- 本地python环境要纯净，不要多个python版本，否则容易导致Dora-rs运行环境和Mofa框架的冲突。
+- 如果你的环境使用的是Anaconda / Miniconda，务必将Mofa安装到`Base`环境下，以保证Dora运行环境和Mofa环境的一致。
+- 要求python环境 >= 3.10。
+- 
 ### 3 安装 CrisisPioneerSearch
 
 ```bash
-# 克隆仓库
+# 在合适的位置克隆仓库
 git clone https://github.com/lovemaoli/CrisisPioneerSearch.git
 cd ./CrisisPioneerSearch
 
@@ -117,16 +153,22 @@ root@root hello_world % terminal-input
  Send You Task :  你好
 -------------llm_result---------------    
 ……
+# 具体运行案例可见 data 下的 md 文件
 ```
 
 ## 架构设计
-### 实现Agent逻辑
 
-输入问题->大模型先给出一个简要的回答->必应搜网站、微博、今日头条、腾讯新闻->发给大模型，大模型最后做一次总结
+### Agent 处理流程设计
+1. 用户通过 terminal-input 输入应急事件查询
+2. 查询分别发送给帮助智能体和搜索智能体
+3. 帮助智能体提供初步回答，基于大模型已有知识
+4. 搜索智能体在多个渠道检索最新信息
+5. 思考智能体整合搜索结果和初步回答，生成最终分析报告
+6. 最终分析报告返回给terminal-input显示给用户
 
 ### 数据流配置解释
 
-关于 `crisis_pioneer_search.yml`：
+#### 关于 `crisis_pioneer_search.yml`：
 1. terminal-input：
 
 - 作为用户交互入口
@@ -187,20 +229,9 @@ messages=[
 
 1. 确保 `.env.secret` 已添加到 `.gitignore`
 2. API密钥要妥善保管
-3. 保持代码结构简单清晰
-
-### agent处理流程详解
-1. 用户通过 terminal-input 输入应急事件查询
-2. 查询分别发送给帮助智能体和搜索智能体
-3. 帮助智能体提供初步回答，基于大模型已有知识
-4. 搜索智能体在多个渠道检索最新信息
-5. 思考智能体整合搜索结果和初步回答，生成最终分析报告
-6. 最终分析报告返回给terminal-input显示给用户
 
 ### 日志文件位置
-- logs/crisis-search-agent.txt: 主智能体运行日志
-- logs/search-engine-agent.txt: 搜索智能体日志
-- logs/thinking-agent.txt: 思考智能体日志
+- logs/crisis-xxx-agent.txt: 主智能体运行日志
 - logs/dora-coordinator.txt: 协调器日志
 - logs/dora-daemon.txt: 守护进程日志
 
@@ -212,24 +243,25 @@ crisis_pioneer_search/
 ├── agent-hub/
 │   ├── crisis-search-agent/
 │   │   ├── configs/
-│   │   │   └── agent.yml       # 配置文件
-│   │   ├── main.py             # 主程序
+│   │   │   └── agent.yml          # 配置文件
+│   │   ├── main.py                # 主程序
 │   │   └── __init__.py
 │   ├── search-engine-agent/
 │   │   ├── configs/
-│   │   │   └── agent.yml       # 配置文件
-│   │   ├── main.py             # 主程序
+│   │   │   └── agent.yml          # 配置文件
+│   │   ├── main.py                # 主程序
 │   │   └── __init__.py
 │   └── thinking-agent/
 │       ├── configs/
-│       │   └── agent.yml       # 配置文件
-│       ├── main.py             # 主程序
+│       │   └── agent.yml          # 配置文件
+│       ├── main.py                # 主程序
 │       └── __init__.py
+├── node-hub/
+│    └─ terminal-input/
+│        └── terminal_input/
+│           └── main.py            # 主程序
 ├── examples/
+│   ├── .env.secret                # API密钥配置
 │   └── crisis_pioneer_search.yml  # 数据流配置
-├── tests/
-│   └── test_agents.py          # 测试代码
-├── .env.secret                 # API密钥配置
-├── pyproject.toml              # 依赖配置
-└── README.md                   # 项目文档
+└── README.md                      # 项目文档
 ```

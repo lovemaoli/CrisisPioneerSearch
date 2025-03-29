@@ -67,7 +67,7 @@ def run(agent: MofaAgent):
 
                 # 打开页面
                 page.goto(url)
-                page.wait_for_timeout(3000)  # 等待 3 秒，确保页面加载完成
+                page.wait_for_timeout(2000)  # 等待 2 秒，确保页面加载完成
 
                 # 获取页面内容
                 content = page.content()
