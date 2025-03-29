@@ -17,9 +17,6 @@ graph TD
     A[终端输入] --> B[帮助智能体]
     A --> C[搜索智能体]
     A --> D[思考智能体]
-    B --> A
-    C --> D
-    D --> A
 
     style A fill:#f9f,stroke:#333,stroke-width:2px
     style B fill:#aec,stroke:#333,stroke-width:2px
@@ -71,23 +68,18 @@ cargo --version
 dora --version
 ```
 
-### 3 安装 MoFa
+### 3 安装 CrisisPioneerSearch
 
 ```bash
 # 克隆仓库
-git clone https://github.com/moxin-org/mofa.git
-cd mofa/python
+git clone https://github.com/lovemaoli/CrisisPioneerSearch.git
+cd ./CrisisPioneerSearch
 
 # 安装依赖
-uv pip install -e .
-pip install -e . 
+uv pip install -r requirements.txt
 ```
 
-### 4 导入agent
-
-将本仓库的 agent-hub 与 example 导入 MoFA 的对应文件夹
-
-### 4.2 配置环境变量
+### 4 配置环境变量
 
 创建 `.env.secret` 文件(crisis_pioneer_search.yml目录同级进行创建)：
 ```plaintext
@@ -99,14 +91,14 @@ LLM_MODEL=gpt-3.5-turbo  # 或其他模型名称
 
 ### 5 启动数据流
 ```bash
-cd  /mofa/python/examples/crisis_pioneer_search
+cd  ./crisis_pioneer_search
 
 # 启动 Dora 服务
 dora up
 
 # 构建并运行数据流
-dora build crisis_pioneer_search.yml
-dora start crisis_pioneer_search.yml
+dora build .\examples\crisis_pioneer_search\crisis_pioneer_search.yml
+dora start .\examples\crisis_pioneer_search\crisis_pioneer_search.yml
 ```
 
 ### 6 测试交互

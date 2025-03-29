@@ -6,3 +6,5 @@ data/**
 ./**/.db
 ./**/.env
 logs/
+**/__pycache__
+__pycache__/
